@@ -1,35 +1,34 @@
 import React, { useContext, useState, useRef, useEffect } from 'react'
+import { Form } from '@unform/web'
+import { SubmitHandler, FormHandles } from '@unform/core'
+import * as Yup from 'yup'
 
 import AuthContext from '../../contexts/auth'
 
-import {
-  validadEmail,
-  validadName,
-  validadSurname,
-  validadPhone
-} from '../../services/validations'
+import Input from '../input'
 
 import { Container } from './styles'
 
-interface Props {
+interface IProps {
   isOpenSidebar: boolean
 }
 
-const layoutdados: React.FC<Props> = ({ isOpenSidebar }) => {
+interface IData {
+  name: string
+  surname: string
+  phone: string
+  github: string
+  behance: string
+  linkedin: string
+}
+
+interface IErrors {
+  [index: string]: string
+}
+
+const layoutdados: React.FC<IProps> = ({ isOpenSidebar }) => {
   const { user, updateEmail, updateUser, uploadImage } = useContext(AuthContext)
-  const inputEmail = useRef<HTMLInputElement>(null)
-  const inputName = useRef<HTMLInputElement>(null)
-  const inputSurname = useRef<HTMLInputElement>(null)
-  const inputPhone = useRef<HTMLInputElement>(null)
-  const inputLinkedin = useRef<HTMLInputElement>(null)
-  const inputBehance = useRef<HTMLInputElement>(null)
-  const inputGithub = useRef<HTMLInputElement>(null)
-  const [error, setError] = useState({
-    emailError: '',
-    nameError: '',
-    surnameError: '',
-    phoneError: ''
-  })
+  const formRef = useRef<FormHandles>(null)
   const [widthSidebarOpen, setWidthSidebarOpen] = useState<boolean>(false)
 
   useEffect(() => {
@@ -48,13 +47,36 @@ const layoutdados: React.FC<Props> = ({ isOpenSidebar }) => {
     }
   }
 
-  const submitEmailUpdate = async () => {
-    if (
-      inputEmail.current &&
-      user.id !== undefined &&
-      error.emailError === ''
-    ) {
-      await updateEmail(inputEmail.current.value, user.id)
+  const submitEmailUpdate: SubmitHandler<string> = async data => {
+    try {
+      if (formRef.current) {
+        formRef.current.setErrors({})
+      }
+
+      const schema = Yup.object().shape({
+        email: Yup.string().email().required('email é obrigatorio !')
+      })
+
+      await schema.validate(data, {
+        abortEarly: false
+      })
+
+      // Validation passed
+      if (user.id !== undefined) {
+        await updateEmail(data, user.id)
+      }
+    } catch (err) {
+      const validationErrors: IErrors = {}
+
+      if (err instanceof Yup.ValidationError && formRef.current) {
+        err.inner.forEach(error => {
+          if (error.path !== undefined) {
+            validationErrors[error.path] = error.message
+          }
+        })
+
+        formRef.current.setErrors(validationErrors)
+      }
     }
   }
 
@@ -66,68 +88,39 @@ const layoutdados: React.FC<Props> = ({ isOpenSidebar }) => {
     }
   }
 
-  const submitUpdateUser = async () => {
-    if (
-      user.id !== undefined &&
-      inputGithub.current &&
-      inputBehance.current &&
-      inputLinkedin.current &&
-      inputSurname.current &&
-      inputEmail.current &&
-      inputName.current &&
-      inputPhone.current &&
-      error.nameError === '' &&
-      error.surnameError === '' &&
-      error.phoneError === ''
-    ) {
-      const userUpdate = {
-        name: inputName.current.value,
-        email: inputEmail.current.value,
-        surname: inputSurname.current.value,
-        github: inputGithub.current.value,
-        linkedin: inputLinkedin.current.value,
-        behance: inputBehance.current.value,
-        phone: inputPhone.current.value
+  const submitUpdateUser: SubmitHandler<IData> = async data => {
+    try {
+      if (formRef.current) {
+        formRef.current.setErrors({})
       }
 
-      await updateUser(userUpdate, user.id)
+      const schema = Yup.object().shape({
+        name: Yup.string().min(4).required('nome é obrigatorio !'),
+        surname: Yup.string().min(4).required('sobrenome é obrigatorio !'),
+        phone: Yup.string().min(8).required('telefone é obrigatorio !')
+      })
+
+      await schema.validate(data, {
+        abortEarly: false
+      })
+
+      // Validation passed
+      if (user.id !== undefined) {
+        await updateUser(data, user.id)
+      }
+    } catch (err) {
+      const validationErrors: IErrors = {}
+
+      if (err instanceof Yup.ValidationError && formRef.current) {
+        err.inner.forEach(error => {
+          if (error.path !== undefined) {
+            validationErrors[error.path] = error.message
+          }
+        })
+
+        formRef.current.setErrors(validationErrors)
+      }
     }
-  }
-
-  const validationName = (name: string) => {
-    const response = validadName(name)
-
-    setError({
-      ...error,
-      nameError: response.nameError
-    })
-  }
-
-  const validationSurname = (surname: string) => {
-    const response = validadSurname(surname)
-
-    setError({
-      ...error,
-      surnameError: response.surnameError
-    })
-  }
-
-  const validationEmail = (email: string) => {
-    const response = validadEmail(email)
-
-    setError({
-      ...error,
-      emailError: response.emailError
-    })
-  }
-
-  const validationPhone = (phone: string) => {
-    const response = validadPhone(phone)
-
-    setError({
-      ...error,
-      phoneError: response.phoneError
-    })
   }
 
   return (
@@ -167,206 +160,157 @@ const layoutdados: React.FC<Props> = ({ isOpenSidebar }) => {
               </div>
             </div>
           </div>
-
           <div className="card alt">
-            <div className="row">
-              <div className="col-sm-12 col-lg-6 col-md-6 col-12">
-                <h2 className="">Email</h2>
-                <p className="">Você pode alterar seu email</p>
-              </div>
-              <div className="col-sm-12 col-lg-6 col-md-6 col-12">
-                <div className="mt-3 mx-auto  mb-3 text-left">
-                  <div className="form-element-component">
-                    <label className="label">
-                      Email
-                      <strong className="stars">*</strong>
-                    </label>
-                    <input
-                      className="input"
-                      onBlur={() =>
-                        validationEmail(
-                          inputEmail.current === null
+            <Form ref={formRef} onSubmit={submitEmailUpdate}>
+              <div className="row">
+                <div className="col-sm-12 col-lg-6 col-md-6 col-12">
+                  <h2 className="">Email</h2>
+                  <p className="">Você pode alterar seu email</p>
+                </div>
+                <div className="col-sm-12 col-lg-6 col-md-6 col-12">
+                  <div className="mt-3 mx-auto  mb-3 text-left">
+                    <div className="form-element-component">
+                      <label className="label">
+                        Email
+                        <strong className="stars">*</strong>
+                      </label>
+                      <Input
+                        name="email"
+                        placehoder="email"
+                        defaultValue={
+                          user.email === null || user.email === undefined
                             ? ''
-                            : inputEmail.current.value
-                        )
-                      }
-                      defaultValue={
-                        user.email === null || user.email === undefined
-                          ? ''
-                          : user.email
-                      }
-                      placeholder="email@exemplo.com"
-                      type="text"
-                      name="email"
-                      ref={inputEmail}
-                    />
+                            : user.email
+                        }
+                      />
+                    </div>
                   </div>
-                  <div className="error">{error.emailError}</div>
+                  <button className="btn btn-primary" type="submit">
+                    <span>Atualizar email</span>
+                  </button>
                 </div>
-                <button
-                  onClick={submitEmailUpdate}
-                  className="btn btn-primary"
-                  type="button"
-                >
-                  <span>Atualizar email</span>
-                </button>
               </div>
-            </div>
+            </Form>
           </div>
+          <div>
+            <Form ref={formRef} onSubmit={submitUpdateUser}>
+              <div className="card">
+                <div className="row">
+                  <div className="col-sm-12 col-lg-6 col-md-6 col-12">
+                    <h2 className="">Instruções</h2>
+                    <p className="">
+                      Preencha seus dados de perfil. Sempre mantenha seu
+                      telefone atualizado.
+                    </p>
+                  </div>
+                  <div className="col-sm-12 col-lg-6 col-md-6 col-12">
+                    <div className="form-element-component">
+                      <label className="label">
+                        Nome
+                        <strong className="stars">*</strong>
+                      </label>
+                      <Input
+                        name="name"
+                        placehoder="Digite seu nome"
+                        type="text"
+                        defaultValue={
+                          user.name === null || user.name === undefined
+                            ? ''
+                            : user.name
+                        }
+                      />
+                    </div>
+                    <div className="form-element-component">
+                      <label className="label">
+                        Sobrenome
+                        <strong className="stars">*</strong>
+                      </label>
+                      <Input
+                        name="surname"
+                        placehoder="Digite seu sobrenome"
+                        type="text"
+                        defaultValue={
+                          user.surname === null || user.surname === undefined
+                            ? ''
+                            : user.surname
+                        }
+                      />
+                    </div>
+                    <div className="form-element-component">
+                      <label className="label">
+                        Telefone
+                        <strong className="stars">*</strong>
+                      </label>
+                      <Input
+                        name="phone"
+                        placehoder="(00) 00000-0000"
+                        type="text"
+                        defaultValue={
+                          user.phone === null || user.phone === undefined
+                            ? ''
+                            : user.phone
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-          <div className="card">
-            <div className="row">
-              <div className="col-sm-12 col-lg-6 col-md-6 col-12">
-                <h2 className="">Instruções</h2>
-                <p className="">
-                  Preencha seus dados de perfil. Sempre mantenha seu telefone
-                  atualizado.
-                </p>
-              </div>
-              <div className="col-sm-12 col-lg-6 col-md-6 col-12">
-                <div className="form-element-component">
-                  <label className="label">
-                    Nome
-                    <strong className="stars">*</strong>
-                  </label>
-                  <input
-                    className="input"
-                    placeholder="Digite seu nome"
-                    type="text"
-                    name="name"
-                    onBlur={() =>
-                      validationName(
-                        inputName.current === null
-                          ? ''
-                          : inputName.current.value
-                      )
-                    }
-                    defaultValue={
-                      user.name === null || user.name === undefined
-                        ? ''
-                        : user.name
-                    }
-                    ref={inputName}
-                  />
-                </div>
-                <div className="error">{error.nameError}</div>
-                <div className="form-element-component">
-                  <label className="label">
-                    Sobrenome
-                    <strong className="stars">*</strong>
-                  </label>
-                  <input
-                    className="input"
-                    placeholder="Digite seu sobrenome"
-                    type="text"
-                    name="surname"
-                    onBlur={() =>
-                      validationSurname(
-                        inputSurname.current === null
-                          ? ''
-                          : inputSurname.current.value
-                      )
-                    }
-                    defaultValue={
-                      user.surname === null || user.surname === undefined
-                        ? ''
-                        : user.surname
-                    }
-                    ref={inputSurname}
-                  />
-                </div>
-                <div className="error">{error.surnameError}</div>
-                <div className="form-element-component">
-                  <label className="label">
-                    Telefone
-                    <strong className="stars">*</strong>
-                  </label>
-                  <input
-                    className="input"
-                    placeholder="(00) 00000-0000"
-                    type="text"
-                    name="phone"
-                    onBlur={() =>
-                      validationPhone(
-                        inputPhone.current === null
-                          ? ''
-                          : inputPhone.current.value
-                      )
-                    }
-                    defaultValue={
-                      user.phone === null || user.phone === undefined
-                        ? ''
-                        : user.phone
-                    }
-                    ref={inputPhone}
-                  />
-                </div>
-                <div className="error">{error.phoneError}</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="row">
-              <div className="col-sm-12 col-lg-6 col-md-6 col-12">
-                <h2 className="">Links Pessoais</h2>
-                <p className="">
-                  Compartilhe seu perfil de outras plataformas aqui.
-                </p>
-              </div>
-              <div className="col-sm-12 col-lg-6 col-md-6 col-12">
-                <div className="form-element-component">
-                  <label className="label">Github</label>
-                  <input
-                    className="input"
-                    placeholder="https://github.com/abcdefghi"
-                    type="text"
-                    name="github"
-                    defaultValue={
-                      user.github === null || user.github === undefined
-                        ? ''
-                        : user.github
-                    }
-                    ref={inputGithub}
-                  />
-                </div>
-                <div className="form-element-component">
-                  <label className="label">Behance</label>
-                  <input
-                    className="input"
-                    placeholder="https://www.behance.net/abcdefghi"
-                    type="text"
-                    name="behance"
-                    defaultValue={
-                      user.behance === null || user.behance === undefined
-                        ? ''
-                        : user.behance
-                    }
-                    ref={inputBehance}
-                  />
-                </div>
-                <div className="form-element-component">
-                  <label className="label">Linkedin</label>
-                  <input
-                    className="input"
-                    placeholder="https://www.linkedin.com/in/abcdefghi"
-                    type="text"
-                    name="linkedin"
-                    defaultValue={
-                      user.linkedin === null || user.linkedin === undefined
-                        ? ''
-                        : user.linkedin
-                    }
-                    ref={inputLinkedin}
-                  />
+              <div className="card">
+                <div className="row">
+                  <div className="col-sm-12 col-lg-6 col-md-6 col-12">
+                    <h2 className="">Links Pessoais</h2>
+                    <p className="">
+                      Compartilhe seu perfil de outras plataformas aqui.
+                    </p>
+                  </div>
+                  <div className="col-sm-12 col-lg-6 col-md-6 col-12">
+                    <div className="form-element-component">
+                      <label className="label">Github</label>
+                      <Input
+                        name="github"
+                        placehoder="https://github.com/abcdefghi"
+                        type="text"
+                        defaultValue={
+                          user.github === null || user.github === undefined
+                            ? ''
+                            : user.github
+                        }
+                      />
+                    </div>
+                    <div className="form-element-component">
+                      <label className="label">Behance</label>
+                      <Input
+                        name="behance"
+                        placehoder="https://www.behance.net/abcdefghi"
+                        type="text"
+                        defaultValue={
+                          user.behance === null || user.behance === undefined
+                            ? ''
+                            : user.behance
+                        }
+                      />
+                    </div>
+                    <div className="form-element-component">
+                      <label className="label">Linkedin</label>
+                      <Input
+                        name="linkedin"
+                        placehoder="https://www.linkedin.com/in/abcdefghi"
+                        type="text"
+                        defaultValue={
+                          user.linkedin === null || user.linkedin === undefined
+                            ? ''
+                            : user.linkedin
+                        }
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-          <div className="col-lg-10 p-3 d-flex justify-content-center updateButton">
-            <button type="button" onClick={submitUpdateUser}>
-              ATUALIZAR
-            </button>
+              <div className="col-lg-12 p-3 d-flex justify-content-center updateButton">
+                <button type="submit">ATUALIZAR</button>
+              </div>
+            </Form>
           </div>
         </div>
       </div>

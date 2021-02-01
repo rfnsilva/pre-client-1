@@ -10,6 +10,10 @@ export const Container = styled.div<Props>`
     props.isOpenSidebar || props.widthSidebarOpen ? '85px;' : '0;'};
   width: 100%;
 
+  form {
+    width: 100%;
+  }
+
   .card {
     width: 100%;
     max-width: 850px;
