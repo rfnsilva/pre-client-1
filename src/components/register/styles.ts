@@ -59,7 +59,6 @@ export const Container = styled.div`
   //CSS Input
   .form__group {
     position: relative;
-    padding: 15px 0 0;
     margin-top: 10px;
     background-color: rgb(208 208 208 / 17%);
     border-radius: 12px;
