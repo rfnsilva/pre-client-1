@@ -85,27 +85,6 @@ const layoutlocalization: React.FC<Props> = ({ isOpenSidebar }) => {
         formRef.current.setErrors(validationErrors)
       }
     }
-    // if (
-    //   user.id !== undefined &&
-    //   inputCEP.current &&
-    //   inputCity.current &&
-    //   inputState.current &&
-    //   inputComplement.current &&
-    //   inputNeighborhood.current &&
-    //   inputNumber.current &&
-    //   inputStreet.current
-    // ) {
-    //   const userAddressUpdate = {
-    //     cep: inputCEP.current.value,
-    //     city: inputCity.current.value,
-    //     state: inputState.current.value,
-    //     complement: inputComplement.current.value,
-    //     neighborhood: inputNeighborhood.current.value,
-    //     number: inputNumber.current.value,
-    //     street: inputStreet.current.value
-    //   }
-    //   await updateLocalization(userAddressUpdate, user.id)
-    // }
   }
 
   return (
@@ -145,7 +124,6 @@ const layoutlocalization: React.FC<Props> = ({ isOpenSidebar }) => {
                       }
                     />
                   </div>
-                  {/* <div className="error">{error.nameError}</div> */}
                   <div className="form-element-component">
                     <label className="label">
                       Cidade
@@ -162,7 +140,6 @@ const layoutlocalization: React.FC<Props> = ({ isOpenSidebar }) => {
                       }
                     />
                   </div>
-                  {/* <div className="error">{error.surnameError}</div> */}
                   <div className="form-element-component">
                     <label className="label">
                       Estado
@@ -179,7 +156,6 @@ const layoutlocalization: React.FC<Props> = ({ isOpenSidebar }) => {
                       }
                     />
                   </div>
-                  {/* <div className="error">{error.phoneError}</div> */}
                   <div className="form-element-component">
                     <label className="label">
                       Bairro
@@ -196,7 +172,6 @@ const layoutlocalization: React.FC<Props> = ({ isOpenSidebar }) => {
                       }
                     />
                   </div>
-                  {/* <div className="error">{error.phoneError}</div> */}
                   <div className="form-element-component">
                     <label className="label">
                       Endereço
@@ -213,7 +188,6 @@ const layoutlocalization: React.FC<Props> = ({ isOpenSidebar }) => {
                       }
                     />
                   </div>
-                  {/* <div className="error">{error.phoneError}</div> */}
                   <div className="form-element-component">
                     <label className="label">
                       Numero
@@ -230,7 +204,6 @@ const layoutlocalization: React.FC<Props> = ({ isOpenSidebar }) => {
                       }
                     />
                   </div>
-                  {/* <div className="error">{error.phoneError}</div> */}
                   <div className="form-element-component">
                     <label className="label">Complemento</label>
                     <Input
